@@ -38,6 +38,10 @@ public:
         return numPag;
     }
 
+    static vector<pair<int, string>> GerarPacotinho(const string &arquivo);
+
+
+
     // vetor de figurinhas
     static vector<Figurinha> CarregarDeCsv(const string &arquivo);
 };
