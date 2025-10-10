@@ -1,7 +1,9 @@
 #include "Album.h"
-
+#include <fstream>
+#include <filesystem>
 #include <iostream>
 #include <ctime>
+#include <limits>
 
 using namespace std;
 
@@ -10,9 +12,7 @@ Album::Album(vector<Figurinha> &todasFigurinhas)
     criarPaginas(todasFigurinhas);
 }
 
-Album::~Album()
-{
-}
+Album::~Album() {}
 
 bool Album::colarFigurinha()
 {
@@ -20,12 +20,11 @@ bool Album::colarFigurinha()
 
     while (true)
     {
-        if (mostrarFigurinhasDaColecao() == false)
+        if (!mostrarFigurinhasDaColecao())
         {
             cout << "Sem figurinhas na coleção." << endl;
             return false;
         }
-        
 
         cout << "Digite o número da figurinha que você deseja colar (0 para sair): ";
         cin >> escolha;
@@ -58,9 +57,9 @@ bool Album::colarFigurinha()
 
         if (!figurinhaValida)
         {
+            cout << "Figurinha inválida!" << endl;
             return false;
         }
-        
     }
 
     return true;
@@ -109,7 +108,7 @@ void Album::verAlbum()
 
 void Album::mostrarFigurinhasColadas()
 {
-    if (figurinhas.size() == 0)
+    if (figurinhas.empty())
     {
         cout << "Sem figurinhas." << endl;
         return;
@@ -126,10 +125,8 @@ void Album::mostrarFigurinhasColadas()
 
 bool Album::mostrarFigurinhasDaColecao()
 {
-    if (figurinhas.size() == 0)
-    {
+    if (figurinhas.empty())
         return false;
-    }
 
     cout << "-- Figurinhas na coleção --" << endl;
 
@@ -183,37 +180,35 @@ void Album::criarPaginas(vector<Figurinha> &todasFigurinhas)
         Pagina novaPagina(conteudo, numMin, numMax);
         paginas.push_back(novaPagina);
     }
-
 }
 
-bool Album::disponibilizarFigurinhaParaTroca()
+Figurinha* Album::disponibilizarFigurinhaParaTroca()
 {
-    if(mostrarFigurinhasIndisponiveisParaTroca() == false)
+    if (!mostrarFigurinhasIndisponiveisParaTroca())
     {
-        cout << "Sem figurinhas indisponíveis pra troca." << endl;
-        cout << "---------------------" << endl;
-        cout << "Pressione ENTER para continuar..." << endl;
-        getchar();
-        getchar();
-        
-        return false;
+        cout << "Sem figurinhas indisponíveis para troca." << endl;
+        cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        cin.get();
+        return nullptr;
     }
 
     int escolha;
     cout << "Digite o número da figurinha que você deseja liberar para troca: ";
-    
     cin >> escolha;
+    cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
     for (Figurinha &f : figurinhas)
     {
         if (f.getNum() == escolha && f.getStatus() == 0)
         {
-            f.disponibilizarParaTroca();
-            cout << "Figurinha \'" << f.getNome() << "\' disponibilizada para troca!" << endl;
+            f.disponibilizarParaTroca(); // status = 2
+            cout << "Figurinha '" << f.getNome() << "' liberada para troca!" << endl;
+            return &f;
         }
-        
     }
-    return true;
+
+    cout << "Número inválido ou figurinha já colada/disponível para troca!" << endl;
+    return nullptr;
 }
 
 bool Album::mostrarFigurinhasIndisponiveisParaTroca()
@@ -228,21 +223,15 @@ bool Album::mostrarFigurinhasIndisponiveisParaTroca()
         }
     }
 
-    if(!existeIndisponivel)
-    {
+    if (!existeIndisponivel)
         return false;
-    }
 
     cout << "-- Figurinhas indisponíveis para troca --" << endl;
-
     for (Figurinha &f : figurinhas)
     {
         if (f.getStatus() == 0)
-        {
             cout << f.getNum() << " - " << f.getNome() << endl;
-        }
     }
-
     cout << "---------------------------------------" << endl;
     return true;
 }
@@ -267,13 +256,12 @@ void Album::abrirPacotinho(vector<Figurinha> &todasFigurinhas)
         int idx = indices[randPos];
 
         pacotinho.push_back(todasFigurinhas[idx]);
-
         indices[randPos] = indices.back();
         indices.pop_back();
     }
 
     cout << "-- Novas figurinhas --" << endl;
-    for (Figurinha f : pacotinho)
+    for (Figurinha &f : pacotinho)
     {
         cout << f.getNome() << endl;
         figurinhas.push_back(f);
@@ -281,6 +269,36 @@ void Album::abrirPacotinho(vector<Figurinha> &todasFigurinhas)
     cout << "---------------------" << endl;
 
     cout << "Pressione ENTER para continuar..." << endl;
-    getchar();
-    getchar();
+    cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    cin.get();
+}
+
+void Album::salvarFigurinhaParaTrocaCSV(Figurinha* f, const std::string &nickname)
+{
+    if (!f) return; // nada para salvar
+
+    namespace fs = std::filesystem;
+    if (!fs::exists("Dados"))
+        fs::create_directory("Dados");
+
+    string nomeArquivo = "Dados/" + nickname + "_trocas.csv";
+    bool arquivoJaExiste = fs::exists(nomeArquivo);
+
+    ofstream arquivo(nomeArquivo, ios::app);
+    if (!arquivo.is_open())
+    {
+        cout << "Erro ao criar o arquivo CSV!" << endl;
+        return;
+    }
+
+    // escreve cabeçalho apenas se o arquivo é novo
+    if (!arquivoJaExiste)
+        arquivo << "Numero,Nome,Conteudo,Status\n";
+
+    arquivo << f->getNum() << ","
+            << f->getNome() << ","
+            << f->getConteudo() << ",Disponivel\n";
+
+    arquivo.close();
+    cout << "Arquivo '" << nomeArquivo << "' salvo com sucesso!" << endl;
 }
