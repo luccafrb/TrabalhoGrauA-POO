@@ -35,7 +35,7 @@ bool Figurinha::colar()
 
 void Figurinha::disponibilizarParaTroca()
 {
-    status = 1;
+    status = 2;
 }
 
 vector<Figurinha> Figurinha::CarregarDeCsv(const string &arquivo)
