@@ -3,6 +3,10 @@
 #include "Figurinha.h"
 #include "Pagina.h"
 #include "Troca.h"
+#include <vector>
+#include <string>
+
+using namespace std;
 
 class Album
 {
@@ -21,7 +25,8 @@ public:
     void adicionarFigurinha(Figurinha figurinha);
     void verAlbum();
     void criarPaginas(vector<Figurinha> &todasFigurinhas);
-    bool disponibilizarFigurinhaParaTroca();
+    Figurinha* disponibilizarFigurinhaParaTroca(); 
     bool mostrarFigurinhasIndisponiveisParaTroca();
     void abrirPacotinho(vector<Figurinha> &todasFigurinhas);
+    void salvarFigurinhaParaTrocaCSV(Figurinha* f, const std::string &nickname);
 };
