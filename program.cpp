@@ -100,8 +100,15 @@ void program::menuGerenciarColecao(Usuario &usuarioAtual, Menus &menus)
         case 1:
             usuarioAtual.getAlbum().colarFigurinha();
             break;
-        case 2:
-            usuarioAtual.getAlbum().disponibilizarFigurinhaParaTroca();
+        case 2:{
+     Figurinha* fLiberada = usuarioAtual.getAlbum().disponibilizarFigurinhaParaTroca();
+
+    // Se a figurinha foi liberada, salva somente ela no CSV
+    if (fLiberada != nullptr)
+    {
+        usuarioAtual.getAlbum().salvarFigurinhaParaTrocaCSV(fLiberada, usuarioAtual.getNome());
+    }
+    }
             break;
         case 3:
             cout << "3 - Propor Troca de Figurinhas" << endl;
@@ -136,7 +143,7 @@ void program::menuInicial()
 
         case 2:
         {
-            Usuario usuarioAtual = login();
+            Usuario &usuarioAtual = login();
 
             menuGerenciarAlbum(usuarioAtual, menus);
             break;
